@@ -7,30 +7,24 @@ allow = [
     "MIT",
     "Apache-2.0",
     "Apache-2.0 WITH LLVM-exception",
-    "ISC",
     "BSD-2-Clause",
     "BSD-3-Clause",
-    "Unicode-DFS-2016",
-    "CC0-1.0",
-    "MPL-2.0",
+    "Unicode-3.0",
     "Zlib",
 ]
 confidence-threshold = 0.8
 
 [advisories]
 version = 2
-# Explicit ignore list — each entry documents WHY it is suppressed.
-# This is not a blanket waiver; each advisory was individually reviewed.
+# Each entry below was individually reviewed — not a blanket waiver.
 ignore = [
-    { id = "RUSTSEC-2024-0436", reason = "paste is an indirect transitive dependency pulled in by soroban-env-host v25.0.1 and ark-ff v0.4.2, both of which are Stellar-maintained or upstream ZK crates outside our control. The advisory is a maintenance notice only — no CVE, no exploit, no known vulnerability. We have no upgrade path; soroban-sdk 25.3.0 does not yet ship with a paste-free env-host." },
+    { id = "RUSTSEC-2024-0436", reason = "paste is a transitive dep of soroban-env-host v25.0.1 and ark-ff v0.4.2. Maintenance-only notice, no CVE or exploit. No upgrade path exists within soroban-sdk 25.3.0." },
+    { id = "RUSTSEC-2024-0388", reason = "derivative is a transitive dep of ark-ec v0.4.2 and ark-ff v0.4.2, pulled in by soroban-env-host v25.0.1. Maintenance-only notice, no CVE or exploit. No upgrade path within the ark 0.4.x series used by soroban-env-host." },
 ]
 
 [bans]
-# Deny duplicate versions of security-critical crates
 multiple-versions = "warn"
 wildcards = "allow"
-# Flag if anyone adds a git-pinned dep without review
-deny = []
 
 [sources]
 unknown-registry = "deny"
