@@ -145,12 +145,20 @@ impl Bn254 {
 
     pub fn pow(mut base: u256, mut exp: u256) -> u256 {
         let mut res = u256::from(1u8);
-        while exp > 0 {
-            if exp % 2 == 1 {
-                res = Self::mul(res, base);
-            }
+        for _ in 0..256 {
+            let bit = exp & u256::from(1u8);
+
+            // Mask is MAX if bit is 1, ZERO if bit is 0
+            // wrapping_sub: 0 - 0 = 0, 0 - 1 = MAX
+            let mask = u256::from(0u8).wrapping_sub(bit);
+
+            let product = Self::mul(res, base);
+
+            // Constant-time selection: if bit == 1 { product } else { res }
+            res = (product & mask) | (res & !mask);
+
             base = Self::mul(base, base);
-            exp /= 2;
+            exp >>= 1;
         }
         res
     }
@@ -581,6 +589,30 @@ mod tests {
         assert!(res.is_identity());
     }
 
+    #[test]
+    fn test_invert() {
+        // invert(2)
+        let a = u256::from(2u8);
+        let a_inv = Bn254::invert(a);
+        let prod = Bn254::mul(a, a_inv);
+        assert_eq!(prod, u256::from(1u8));
+
+        // invert(1)
+        let a = u256::from(1u8);
+        let a_inv = Bn254::invert(a);
+        assert_eq!(a_inv, u256::from(1u8));
+
+        // invert(0) -> 0 by convention in this implementation
+        let a = u256::from(0u8);
+        let a_inv = Bn254::invert(a);
+        assert_eq!(a_inv, u256::from(0u8));
+
+        // invert a larger number
+        let a = u256::from(123456789u32);
+        let a_inv = Bn254::invert(a);
+        let prod = Bn254::mul(a, a_inv);
+        assert_eq!(prod, u256::from(1u8));
+    }
     #[test]
     fn test_g1_msm_mismatched_lengths() {
         let p = G1Affine {
