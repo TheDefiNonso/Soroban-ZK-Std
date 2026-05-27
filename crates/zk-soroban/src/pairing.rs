@@ -94,18 +94,17 @@ mod tests {
         };
 
         // Standard BN254 G2 Generator Constants
-        // P = 0x30644e72e131a029b85045b68181585d97816a916871ca8d3c208c16d87cfd47
         let g2 = G2Affine {
             x: (
                 // X c0 (Real)
                 u256::from_str_radix(
-                    "10822403556616783d294cae447f68c351084c519bc131644754784460d3d548",
+                    "1800deef121f1e76426a00665e5c4479674322d4f75edadd46debd5cd992f6ed",
                     16,
                 )
                 .unwrap(),
                 // X c1 (Imaginary)
                 u256::from_str_radix(
-                    "012c40590818290663486c8f967a1262d47155ec1608677c77d0a64983050961",
+                    "198e9393920d483a7260bfb731fb5d25f1aa493335a9e71297e485b7aef312c2",
                     16,
                 )
                 .unwrap(),
@@ -113,13 +112,13 @@ mod tests {
             y: (
                 // Y c0 (Real)
                 u256::from_str_radix(
-                    "0689357dbd07bdc858f01f28fd87f6b6e11802996d9ed800f1351194380126d4",
+                    "12c85ea5db8c6deb4aab71808dcb408fe3d1e7690c43d37b4ce6cc0166fa7daa",
                     16,
                 )
                 .unwrap(),
                 // Y c1 (Imaginary)
                 u256::from_str_radix(
-                    "24f0c4314c4083a290e2124576307135e6179426f497401c37b60514f7b603d3",
+                    "090689d0585ff075ec9e99ad690c3395bc4b313370b38ef355acdadcd122975b",
                     16,
                 )
                 .unwrap(),

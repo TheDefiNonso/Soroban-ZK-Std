@@ -36,7 +36,11 @@ A Groth16 verification with 1 public input requires:
 1. 1x Multi-Scalar Multiplication (size 2)
 2. 1x Pairing Check of 4 pairs `e(A, B) * e(alpha, beta) * e(L, gamma) * e(C, delta) == 1`
 
-*Note: The `pairing_check` host function is heavily optimized by the Soroban environment, completing well within the remaining ~395M budget.*
+| Operation | Measured Cost | Status |
+| :--- | :--- | :--- |
+| `groth16_verify` | 29,327,515 | Pass (Well under 400M limit) |
+
+*Note: The `pairing_check` host function is heavily optimized by the Soroban environment, completing well within the ~395M budget.*
 
 ## CI Integration
 The benchmark suite is fully integrated into the project's CI pipeline via the `make bench` target. 

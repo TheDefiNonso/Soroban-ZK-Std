@@ -2,7 +2,7 @@
 resolver = "2"
 members = [
     "crates/*",
-    "contracts/*",
+    "contracts/*", "dump_g2",
 ]
 
 [workspace.package]
