@@ -2,26 +2,48 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+    /* Light Mode Variables (Default) */
+    --bg-primary: 0 0% 100%;
+    /* Pure White */
+    --bg-secondary: 0 0% 98%;
+    /* Neutral 50 */
+    --text-primary: 0 0% 0%;
+    /* Pure Black */
+    --text-secondary: 0 0% 45%;
+    /* Neutral 500 */
+    --border-color: 0 0% 90%;
+    /* Neutral 200 */
+    --invert-element: 0 0% 0%;
+    /* Black (for logos/buttons) */
+    --invert-text: 0 0% 100%;
+    /* White (for logos/buttons) */
+  }
+
+  .dark {
+    /* Dark Mode Variables */
+    --bg-primary: 0 0% 4%;
+    /* Neutral 950 */
+    --bg-secondary: 0 0% 9%;
+    /* Neutral 900 */
+    --text-primary: 0 0% 100%;
+    /* Pure White */
+    --text-secondary: 0 0% 65%;
+    /* Neutral 400 */
+    --border-color: 0 0% 15%;
+    /* Neutral 800 */
+    --invert-element: 0 0% 100%;
+    /* White */
+    --invert-text: 0 0% 0%;
+    /* Black */
   }
 }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
+@layer base {
+  body {
+    background-color: hsl(var(--bg-primary));
+    color: hsl(var(--text-primary));
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
 }
