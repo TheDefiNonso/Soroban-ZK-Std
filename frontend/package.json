@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/generate-api-docs.mjs",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "generate-api-docs": "node scripts/generate-api-docs.mjs"
   },
   "dependencies": {
     "katex": "^0.17.0",

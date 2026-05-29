@@ -57,7 +57,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
           </Link>
         </div>
 
-        {/* Center: Search (desktop) */}
+        {/* Center: DocSearch (desktop) */}
         <div className="hidden md:flex flex-1 max-w-md mx-8">
           <button
             onClick={() => setIsSearchOpen(true)}
