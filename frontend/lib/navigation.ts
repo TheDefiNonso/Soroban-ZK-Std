@@ -40,6 +40,12 @@ export const navigation: NavItem[] = [
       { title: "Shielded Assets", href: "/docs/shielded-assets" },
     ],
   },
+  {
+    title: "Reference",
+    children: [
+      { title: "ZK Cryptography Glossary", href: "/docs/glossary" },
+    ],
+  },
 ];
 
 export function getFlatNavItems(): { title: string; href: string }[] {

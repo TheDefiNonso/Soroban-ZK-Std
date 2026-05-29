@@ -56,6 +56,12 @@ const navigation: NavItem[] = [
       { title: "Shielded Assets", href: "/docs/shielded-assets" },
     ],
   },
+  {
+    title: "Reference",
+    children: [
+      { title: "ZK Cryptography Glossary", href: "/docs/glossary" },
+    ],
+  },
 ];
 
 function ChevronIcon({ open }: { open: boolean }) {
