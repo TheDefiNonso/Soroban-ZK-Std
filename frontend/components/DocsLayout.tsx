@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { Navbar } from "./Navbar";
 import { Sidebar } from "./Sidebar";
+import { PrevNextNav } from "./PrevNextNav";
 
 interface DocsLayoutProps {
   children: React.ReactNode;
@@ -25,6 +26,7 @@ export function DocsLayout({ children }: DocsLayoutProps) {
         <main className="flex-1 min-w-0">
           <div className="max-w-4xl mx-auto px-6 md:px-8 py-10 md:py-14">
             {children}
+            <PrevNextNav />
           </div>
 
           {/* Footer */}
