@@ -265,23 +265,6 @@ assert_eq!(product.evaluate(u256::from(1u8)), u256::from(54u8));`}
         </div>
       </section>
 
-      {/* Navigation */}
-      <section>
-        <div className="flex items-center justify-between pt-8 border-t border-neutral-200 dark:border-neutral-800">
-          <a
-            href="/docs/cap0075"
-            className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
-          >
-            ← CAP-0075 Integration
-          </a>
-          <a
-            href="/docs/pairing"
-            className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
-          >
-            Pairing API →
-          </a>
-        </div>
-      </section>
     </DocsLayout>
   );
 }

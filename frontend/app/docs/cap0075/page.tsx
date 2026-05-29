@@ -167,23 +167,6 @@ fn verify_identity(env: &Env) -> Result<bool, ZkError> {
         </div>
       </section>
 
-      {/* Next Steps */}
-      <section>
-        <div className="flex items-center justify-between pt-8 border-t border-neutral-200 dark:border-neutral-800">
-          <a
-            href="/docs"
-            className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
-          >
-            ← Introduction
-          </a>
-          <a
-            href="/docs/polynomial-operations"
-            className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
-          >
-            Polynomial Operations →
-          </a>
-        </div>
-      </section>
     </DocsLayout>
   );
 }
