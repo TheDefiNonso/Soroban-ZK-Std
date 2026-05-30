@@ -3,60 +3,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-<<<<<<< version-selector-keyboard-nav
 import { VersionSelector } from "./version-selector/VersionSelector";
 import { useDocVersion } from "../hooks/useDocVersion";
-=======
->>>>>>> main
-
-interface NavItem {
-  title: string;
-  href?: string;
-  children?: NavItem[];
-}
-
-const navigation: NavItem[] = [
-  {
-    title: "Getting Started",
-    children: [
-      { title: "Introduction", href: "/docs" },
-      { title: "Installation", href: "/docs/installation" },
-      { title: "Quick Start", href: "/docs/quick-start" },
-    ],
-  },
-  {
-    title: "Core Concepts",
-    children: [
-      { title: "Field Arithmetic", href: "/docs/field-arithmetic" },
-      { title: "Elliptic Curves", href: "/docs/elliptic-curves" },
-      { title: "Scalar Validation", href: "/docs/scalar-validation" },
-    ],
-  },
-  {
-    title: "API Reference",
-    children: [
-      { title: "Polynomial Operations", href: "/docs/polynomial-operations" },
-      { title: "Pairing", href: "/docs/pairing" },
-      { title: "Poseidon2", href: "/docs/poseidon2" },
-      { title: "ElGamal Encryption", href: "/docs/elgamal" },
-    ],
-  },
-  {
-    title: "Tools",
-    children: [
-      { title: "Gas Calculator", href: "/tools/gas-calculator" },
-      { title: "Math Rendering", href: "/docs/math-rendering" },
-    ],
-  },
-  {
-    title: "Guides",
-    children: [
-      { title: "CAP-0075 Integration", href: "/docs/cap0075" },
-      { title: "ASP Integration", href: "/docs/asp-integration" },
-      { title: "Shielded Assets", href: "/docs/shielded-assets" },
-    ],
-  },
-];
+import { navigation, type NavItem } from "@/lib/navigation";
 
 function ChevronIcon({ open }: { open: boolean }) {
   return (
