@@ -23,6 +23,7 @@ export default function Home() {
           {/* Centered Navigation */}
           <nav className="hidden md:flex space-x-8 text-xs font-bold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase">
             <a href="#guides" className="hover:text-black dark:hover:text-white transition-colors duration-200">Guides</a>
+            <a href="/tools/gas-calculator" className="hover:text-black dark:hover:text-white transition-colors duration-200">Tools</a>
             <a href="#contrib" className="hover:text-black dark:hover:text-white transition-colors duration-200">Contrib</a>
             <a href="#source" className="hover:text-black dark:hover:text-white transition-colors duration-200">Source</a>
             <a href="#community" className="hover:text-black dark:hover:text-white transition-colors duration-200">Community</a>
@@ -126,7 +127,7 @@ export default function Home() {
             <div className="flex flex-col">
               <h3 className="text-black dark:text-white text-xl font-bold mb-3 tracking-tight transition-colors duration-300">Understandable</h3>
               <p className="text-neutral-500 dark:text-neutral-400 leading-relaxed text-sm transition-colors duration-300">
-                Cryptography is not simple, but integrating it shouldn't be hard to find the answers to.
+                Cryptography is not simple, but integrating it shouldn&apos;t be hard to find the answers to.
               </p>
             </div>
 

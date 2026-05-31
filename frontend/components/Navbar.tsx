@@ -1,15 +1,30 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "./theme-toggle";
-import { DocSearch } from "./DocSearch";
+import { VersionSelector } from "./version-selector/VersionSelector";
+import { SearchModal } from "./SearchModal";
 
 interface NavbarProps {
   onToggleSidebar: () => void;
 }
 
 export function Navbar({ onToggleSidebar }: NavbarProps) {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 w-full h-16 border-b border-neutral-200 dark:border-neutral-800 bg-white/90 dark:bg-neutral-950/90 backdrop-blur-md transition-colors duration-300">
       <div className="h-full px-4 md:px-6 flex items-center justify-between">
@@ -36,7 +51,7 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
             <span className="hidden sm:block text-sm font-bold text-black dark:text-white tracking-tight">
               Soroban-ZK-Std
             </span>
-            <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700">
+            <span className="hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-400 border border-neutral-200 dark:border-neutral-700">
               Docs
             </span>
           </Link>
@@ -44,11 +59,33 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
 
         {/* Center: DocSearch (desktop) */}
         <div className="hidden md:flex flex-1 max-w-md mx-8">
-          <DocSearch />
+          <button
+            onClick={() => setIsSearchOpen(true)}
+            className="relative w-full group flex items-center pl-10 pr-4 py-2 text-sm bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl text-neutral-400 dark:text-neutral-500 hover:text-black dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-black dark:focus-visible:ring-white transition-all duration-200"
+            aria-label="Search documentation"
+          >
+            <svg
+              className="absolute left-3 w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>Search documentation...</span>
+            <kbd className="absolute right-3 hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono font-bold text-neutral-400 dark:text-neutral-500 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded">
+              ⌘K
+            </kbd>
+          </button>
         </div>
 
         {/* Right: Actions */}
         <div className="flex items-center gap-2">
+          {/* Version Selector */}
+          <div className="hidden sm:block mr-2">
+            <VersionSelector />
+          </div>
+          
           {/* GitHub Link */}
           <a
             href="https://github.com/georgegoldman/Soroban-ZK-Std"
@@ -66,6 +103,8 @@ export function Navbar({ onToggleSidebar }: NavbarProps) {
           <ThemeToggle />
         </div>
       </div>
+
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </header>
   );
 }

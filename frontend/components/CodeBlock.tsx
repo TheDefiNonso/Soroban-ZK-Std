@@ -144,7 +144,12 @@ export function CodeBlock({
   if (!mounted) {
     return (
       <div className="my-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-        <div className="p-4">
+        <div 
+          className="p-4 overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500" 
+          tabIndex={0}
+          role="region"
+          aria-label="Code block content"
+        >
           <pre className="text-sm text-neutral-500">
             <code>{code.trim()}</code>
           </pre>
@@ -187,10 +192,10 @@ export function CodeBlock({
         {/* Copy Button */}
         <button
           onClick={handleCopy}
-          className={`absolute top-3 right-3 z-10 p-1.5 rounded-md text-xs font-mono transition-all duration-200 ${
+          className={`absolute top-3 right-3 z-10 p-1.5 rounded-md text-xs font-mono transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-black dark:focus:ring-white ${
             copied
-              ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400"
-              : "bg-neutral-200/80 dark:bg-neutral-800/80 text-neutral-500 dark:text-neutral-400 opacity-0 group-hover:opacity-100 hover:bg-neutral-300 dark:hover:bg-neutral-700"
+              ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 opacity-100"
+              : "bg-neutral-200/80 dark:bg-neutral-800/80 text-neutral-500 dark:text-neutral-400 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 hover:bg-neutral-300 dark:hover:bg-neutral-700"
           }`}
           aria-label={copied ? "Copied!" : "Copy code"}
         >
@@ -223,8 +228,11 @@ export function CodeBlock({
           {/* Highlighted Code */}
           <div
             ref={codeRef}
-            className="flex-1 overflow-x-auto text-sm [&_pre]:!bg-transparent [&_pre]:!p-4 [&_pre]:!m-0 [&_code]:!text-sm [&_code]:leading-6 [&_code]:font-mono"
+            tabIndex={0}
+            className="flex-1 overflow-x-auto text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 [&_pre]:!bg-transparent [&_pre]:!p-4 [&_pre]:!m-0 [&_code]:!text-sm [&_code]:leading-6 [&_code]:font-mono"
             dangerouslySetInnerHTML={{ __html: highlightedCode }}
+            aria-label="Code block content"
+            role="region"
           />
         </div>
       </div>
