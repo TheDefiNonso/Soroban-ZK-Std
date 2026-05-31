@@ -127,7 +127,7 @@ export default function Home() {
             <div className="flex flex-col">
               <h3 className="text-black dark:text-white text-xl font-bold mb-3 tracking-tight transition-colors duration-300">Understandable</h3>
               <p className="text-neutral-500 dark:text-neutral-400 leading-relaxed text-sm transition-colors duration-300">
-                Cryptography is not simple, but integrating it shouldn't be hard to find the answers to.
+                Cryptography is not simple, but integrating it shouldn&apos;t be hard to find the answers to.
               </p>
             </div>
 

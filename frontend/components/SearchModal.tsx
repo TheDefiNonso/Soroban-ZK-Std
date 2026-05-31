@@ -87,7 +87,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
         <div className="max-h-[60vh] overflow-y-auto p-4">
           {query ? (
             <div className="text-sm text-neutral-500 dark:text-neutral-400 py-8 text-center">
-              No results found for "{query}"
+              No results found for &ldquo;{query}&rdquo;
             </div>
           ) : (
             <div className="text-sm text-neutral-500 dark:text-neutral-400 py-8 text-center">

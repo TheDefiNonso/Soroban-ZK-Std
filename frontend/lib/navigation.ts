@@ -29,7 +29,15 @@ export const navigation: NavItem[] = [
       { title: "Polynomial Operations", href: "/docs/polynomial-operations" },
       { title: "Pairing", href: "/docs/pairing" },
       { title: "Poseidon2", href: "/docs/poseidon2" },
+      { title: "Non-Native Math", href: "/docs/non-native-math" },
       { title: "ElGamal Encryption", href: "/docs/elgamal" },
+    ],
+  },
+  {
+    title: "Tools",
+    children: [
+      { title: "Gas Calculator", href: "/tools/gas-calculator" },
+      { title: "Math Rendering", href: "/docs/math-rendering" },
     ],
   },
   {
