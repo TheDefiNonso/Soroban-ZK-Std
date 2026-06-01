@@ -5,7 +5,9 @@
 //!
 //! Parameters (BN254, t=3): d=5, rounds_f=8, rounds_p=56, rate=2, capacity=1.
 
+use ethnum::u256 as eth_u256;
 use soroban_sdk::{symbol_short, vec, Bytes, Env, Vec, U256};
+use zk_core::{Fr, SafeFrom, ZkError};
 
 // ── Sponge geometry ───────────────────────────────────────────────────────────
 
@@ -46,6 +48,18 @@ fn field_add(env: &Env, a: &U256, b: &U256) -> U256 {
     } else {
         sum
     }
+}
+
+fn fr_to_u256(env: &Env, input: Fr) -> U256 {
+    let bytes = input.inner().to_be_bytes();
+    let bytes = Bytes::from_array(env, &bytes);
+    U256::from_be_bytes(env, &bytes)
+}
+
+fn u256_to_fr(challenge: U256) -> Result<Fr, ZkError> {
+    let mut bytes = [0u8; 32];
+    challenge.to_be_bytes().copy_into_slice(&mut bytes);
+    Fr::safe_from(eth_u256::from_be_bytes(bytes))
 }
 
 // ── BN254 t=3 Poseidon2 constants ─────────────────────────────────────────────
@@ -583,11 +597,44 @@ pub fn hash_to_field(env: &Env, inputs: &[U256]) -> U256 {
     sponge.squeeze()
 }
 
+/// Fiat-Shamir transcript built on top of the BN254 Poseidon2 sponge.
+///
+/// The transcript is stateful: each absorb updates the sponge state, and each
+/// squeeze advances the permutation before producing the next challenge.
+pub struct Transcript {
+    env: Env,
+    sponge: Poseidon2Sponge,
+}
+
+impl Transcript {
+    /// Create a fresh transcript with an empty Poseidon2 state.
+    pub fn new(env: &Env) -> Self {
+        Self {
+            env: env.clone(),
+            sponge: Poseidon2Sponge::new(env),
+        }
+    }
+
+    /// Absorb canonical BN254 field elements into the transcript.
+    pub fn absorb(&mut self, inputs: &[Fr]) {
+        for input in inputs {
+            let raw = fr_to_u256(&self.env, *input);
+            self.sponge.absorb(core::slice::from_ref(&raw));
+        }
+    }
+
+    /// Squeeze the next Fiat-Shamir challenge as a validated BN254 `Fr`.
+    pub fn squeeze_challenge(&mut self) -> Result<Fr, ZkError> {
+        u256_to_fr(self.sponge.squeeze())
+    }
+}
+
 // ── Tests ─────────────────────────────────────────────────────────────────────
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use ethnum::u256;
     use soroban_sdk::Env;
 
     fn env() -> Env {
@@ -703,5 +750,54 @@ mod tests {
         let a = hash_to_field(&env, &[U256::from_u128(&env, 1), U256::from_u128(&env, 2)]);
         let b = hash_to_field(&env, &[U256::from_u128(&env, 2), U256::from_u128(&env, 1)]);
         assert_ne!(a, b);
+    }
+
+    fn fr(value: u128) -> Fr {
+        Fr::safe_from(u256::from(value)).unwrap()
+    }
+
+    #[test]
+    fn transcript_is_deterministic() {
+        let env = env();
+        let inputs = [fr(1), fr(2), fr(3)];
+
+        let mut left = Transcript::new(&env);
+        left.absorb(&inputs);
+        let left_challenge = left.squeeze_challenge().unwrap();
+
+        let mut right = Transcript::new(&env);
+        right.absorb(&inputs);
+        let right_challenge = right.squeeze_challenge().unwrap();
+
+        assert_eq!(left_challenge, right_challenge);
+    }
+
+    #[test]
+    fn transcript_order_matters() {
+        let env = env();
+        let a = [fr(1), fr(2)];
+        let b = [fr(2), fr(1)];
+
+        let mut left = Transcript::new(&env);
+        left.absorb(&a);
+        let left_challenge = left.squeeze_challenge().unwrap();
+
+        let mut right = Transcript::new(&env);
+        right.absorb(&b);
+        let right_challenge = right.squeeze_challenge().unwrap();
+
+        assert_ne!(left_challenge, right_challenge);
+    }
+
+    #[test]
+    fn transcript_squeezes_progress_state() {
+        let env = env();
+        let mut transcript = Transcript::new(&env);
+        transcript.absorb(&[fr(42)]);
+
+        let first = transcript.squeeze_challenge().unwrap();
+        let second = transcript.squeeze_challenge().unwrap();
+
+        assert_ne!(first, second);
     }
 }
