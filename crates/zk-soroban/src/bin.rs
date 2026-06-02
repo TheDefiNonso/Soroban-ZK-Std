@@ -15,5 +15,6 @@ fn main() {
 
     println!("G2 X c0 (Real): {:x}", x_c0);
     println!("G2 X c1 (Imag): {:x}", x_c1);
-    // ...
+    println!("G2 Y c0 (Real): {:x}", y_c0);
+    println!("G2 Y c1 (Imag): {:x}", y_c1);
 }
