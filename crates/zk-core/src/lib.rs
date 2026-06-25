@@ -38,6 +38,8 @@ pub mod elgamal {
 }
 
 pub use elgamal::ElGamalCiphertext;
+pub mod polynomial;
+pub use polynomial::{DensePolynomial, SparsePolynomial};
 
 /// Errors returned by zero-knowledge conversion and validation operations.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

@@ -51,7 +51,7 @@ export function VersionSelector() {
   }, []);
 
   return (
-    <div className="relative inline-block text-left" ref={containerRef}>
+    <div className="relative inline-block text-left w-36" ref={containerRef}>
       <button
         ref={buttonRef}
         type="button"

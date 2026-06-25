@@ -4,6 +4,13 @@ import { Alert } from '@/components/mdx/Alert';
 import { Callout } from '@/components/mdx/Callout';
 import { Demo } from '@/components/mdx/Demo';
 
+function extractText(children: React.ReactNode): string {
+  if (typeof children === 'string') return children;
+  if (Array.isArray(children)) return children.map(extractText).join('');
+  if (React.isValidElement(children)) return extractText(children.props.children);
+  return '';
+}
+
 /**
  * Global MDX component registry.
  *
@@ -23,16 +30,22 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         {children}
       </h1>
     ),
-    h2: ({ children }) => (
-      <h2 className="text-2xl font-bold text-black dark:text-white tracking-tight mt-10 mb-4">
-        {children}
-      </h2>
-    ),
-    h3: ({ children }) => (
-      <h3 className="text-xl font-semibold text-black dark:text-white mt-8 mb-3">
-        {children}
-      </h3>
-    ),
+    h2: ({ children }) => {
+      const id = extractText(children).toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+      return (
+        <h2 id={id} className="text-2xl font-bold text-black dark:text-white tracking-tight mt-10 mb-4 scroll-mt-24">
+          {children}
+        </h2>
+      );
+    },
+    h3: ({ children }) => {
+      const id = extractText(children).toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+      return (
+        <h3 id={id} className="text-xl font-semibold text-black dark:text-white mt-8 mb-3 scroll-mt-24">
+          {children}
+        </h3>
+      );
+    },
     h4: ({ children }) => (
       <h4 className="text-lg font-semibold text-black dark:text-white mt-6 mb-2">
         {children}

@@ -16,7 +16,8 @@
     "package-lock.json",
     "pnpm-lock.yaml",
     "**/*.json",
-    "frontend/.next/**"
+    "frontend/.next/**",
+    "specs/**"
   ],
   "ignoreRegExpList": ["/```[\\s\\S]*?```/g", "/`[^`]+`/g", "/0x[0-9a-fA-F]+/g"]
 }

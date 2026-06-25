@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "prebuild": "node scripts/generate-api-docs.mjs",
+    "prebuild": "node scripts/generate-api-docs.mjs && node scripts/generate-rss.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
     "generate-api-docs": "node scripts/generate-api-docs.mjs",
+    "generate-rss": "node scripts/generate-rss.mjs",
     "test": "jest"
   },
   "dependencies": {

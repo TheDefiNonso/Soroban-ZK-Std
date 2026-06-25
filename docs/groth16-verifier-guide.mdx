@@ -1,0 +1,323 @@
+---
+title: "Groth16 Verifier Guide"
+description: "Build a minimal Groth16 verification contract from scratch on Soroban using Soroban-ZK-Std."
+protocol: "25"
+cap: "CAP-0075"
+---
+
+# Groth16 Verifier Guide
+
+> Build a minimal Groth16 verification contract from scratch using `Soroban-ZK-Std`.
+
+This guide explains the core steps for a Soroban contract that verifies Groth16 proofs using BN254 pairings and native ZK host functions.
+
+---
+
+## 1. What this guide covers
+
+- Contract scaffold and dependencies
+- Verification key and proof data shapes
+- BN254 pairing checks with `zk-soroban`
+- Safe scalar conversion using `fr_from_u256`
+- Building, testing, and deploying the contract
+
+---
+
+## 2. Prerequisites
+
+Make sure you have:
+
+- Rust installed
+- `wasm32-unknown-unknown` target added
+- Soroban CLI installed
+- A project created with `soroban contract init`
+
+Verify the toolchain:
+
+```bash
+rustc --version
+cargo --version
+soroban --version
+```
+
+---
+
+## 3. Add dependencies
+
+Edit your contract's `Cargo.toml` and add the `soroban-sdk` and `zk-soroban` crates:
+
+```toml
+[dependencies]
+soroban-sdk = "25.0.0"
+zk-soroban = { git = "https://github.com/paulpeter32-coder/Soroban-ZK-Std.git" }
+ethnum = "1.3"
+```
+
+> Use the correct SDK version for your Soroban environment.
+
+---
+
+## 4. Import the right types
+
+In `src/lib.rs`, import the core ZK and Soroban types:
+
+```rust
+#![no_std]
+use soroban_sdk::{contract, contractimpl, Env, Vec, U256};
+use zk_core::{G1Affine, ZkError};
+use zk_soroban::{pairing::{pairing_check, G2Affine}, HostConvert};
+```
+
+This gives you:
+
+- `G1Affine` for BN254 G1 points
+- `G2Affine` for BN254 G2 points
+- `pairing_check` for efficient Groth16 verification
+- `fr_from_u256` for safe BN254 scalar conversion
+
+---
+
+## 5. Define verification data structures
+
+A Groth16 verifier needs the proof points and the verification key.
+
+```rust
+pub struct Groth16Proof {
+    pub a: G1Affine,
+    pub b: G2Affine,
+    pub c: G1Affine,
+}
+
+pub struct Groth16Vk {
+    pub alpha_g1: G1Affine,
+    pub beta_g2: G2Affine,
+    pub gamma_g2: G2Affine,
+    pub delta_g2: G2Affine,
+    pub ic: Vec<G1Affine>,
+}
+```
+
+`ic` contains the public-input commitment points from the trusted setup.
+
+---
+
+## 6. Build the linear combination for public inputs
+
+Groth16 verification requires computing:
+
+```text
+vk_x = IC[0] + sum(public_input[i] * IC[i+1])
+```
+
+This contract example uses a helper function to compute `vk_x` using scalar multiplication and point addition from `zk-core`.
+
+```rust
+fn compute_vk_x(public_inputs: &[U256], ic: &Vec<G1Affine>) -> Result<G1Affine, ZkError> {
+    if public_inputs.len() + 1 != ic.len() {
+        return Err(ZkError::InvalidInput);
+    }
+
+    let mut vk_x = ic.get(0).cloned().ok_or(ZkError::InvalidInput)?;
+
+    for (i, input) in public_inputs.iter().enumerate() {
+        let scalar = Env::default().fr_from_u256(*input)?;
+        let term = ic.get(i + 1).unwrap().scalar_mul(scalar);
+        vk_x = vk_x + term;
+    }
+
+    Ok(vk_x)
+}
+```
+
+> In a real contract, avoid `Env::default()` inside helpers. Pass the `Env` through or perform conversion inside entry points.
+
+---
+
+## 7. Write the Groth16 verification function
+
+The Groth16 verifier checks the pairing equation:
+
+```text
+e(A, B) · e(-vk_x, gamma) · e(-C, delta) · e(-alpha, beta) == 1
+```
+
+The contract implementation looks like this:
+
+```rust
+#[contract]
+pub struct Groth16Verifier;
+
+#[contractimpl]
+impl Groth16Verifier {
+    pub fn verify(
+        env: Env,
+        proof: Groth16Proof,
+        vk: Groth16Vk,
+        public_inputs: Vec<U256>,
+    ) -> bool {
+        let mut serialized_inputs: Vec<U256> = Vec::new(&env);
+        for input in public_inputs.iter() {
+            serialized_inputs.push_back(*input);
+        }
+
+        let vk_x = match compute_vk_x(&serialized_inputs, &vk.ic) {
+            Ok(v) => v,
+            Err(_) => return false,
+        };
+
+        let pairs = [
+            (proof.a, proof.b),
+            (negate_g1(vk_x), vk.gamma_g2),
+            (negate_g1(proof.c), vk.delta_g2),
+            (negate_g1(vk.alpha_g1), vk.beta_g2),
+        ];
+
+        pairing_check(&env, &pairs).unwrap_or(false)
+    }
+}
+```
+
+`negate_g1` flips the `y` coordinate of a `G1Affine` point to produce the negated G1 element.
+
+---
+
+## 8. Deserialize points from host data
+
+In practice, proofs and verification keys arrive as bytes from your off-chain prover.
+
+The `zk-soroban` crate serializes points in the same format expected by Soroban's BN254 host APIs.
+Use `G1Affine` and `G2Affine` helpers to build points from bytes.
+
+If you pass bytes into a contract, deserialize them in the contract before calling `pairing_check`.
+
+---
+
+## 9. Safe scalar conversion with `fr_from_u256`
+
+Public inputs must be BN254 field elements. `zk-soroban` makes this easy:
+
+```rust
+let field_elem = env.fr_from_u256(input_u256)?;
+```
+
+This returns `Err(ZkError::InvalidFieldElement)` for values outside the BN254 scalar range.
+Always validate inputs before using them in a pairing-based verifier.
+
+---
+
+## 10. Example full contract
+
+Below is a minimal verifier contract skeleton.
+
+```rust
+#![no_std]
+use soroban_sdk::{contract, contractimpl, Env, U256, Vec};
+use zk_core::{G1Affine, ZkError};
+use zk_soroban::{pairing::{pairing_check, G2Affine}, HostConvert};
+
+pub struct Groth16Proof {
+    pub a: G1Affine,
+    pub b: G2Affine,
+    pub c: G1Affine,
+}
+
+pub struct Groth16Vk {
+    pub alpha_g1: G1Affine,
+    pub beta_g2: G2Affine,
+    pub gamma_g2: G2Affine,
+    pub delta_g2: G2Affine,
+    pub ic: Vec<G1Affine>,
+}
+
+fn negate_g1(point: G1Affine) -> G1Affine {
+    // Negation of a BN254 G1 point is done by negating the Y coordinate in Fq.
+    // In other words: `y' = q - y`, where `q` is the BN254 field modulus.
+    // Implement this using `zk-core` field helpers in production.
+    unimplemented!()
+}
+
+fn compute_vk_x(env: &Env, public_inputs: &[U256], ic: &Vec<G1Affine>) -> Result<G1Affine, ZkError> {
+    if public_inputs.len() + 1 != ic.len() {
+        return Err(ZkError::InvalidInput);
+    }
+
+    let mut vk_x = ic.get(0).cloned().ok_or(ZkError::InvalidInput)?;
+
+    for (i, input) in public_inputs.iter().enumerate() {
+        let scalar = env.fr_from_u256(*input)?;
+        let term = ic.get(i + 1).unwrap().scalar_mul(scalar.inner());
+        vk_x = vk_x + term;
+    }
+
+    Ok(vk_x)
+}
+
+#[contract]
+pub struct Groth16Verifier;
+
+#[contractimpl]
+impl Groth16Verifier {
+    pub fn verify(
+        env: Env,
+        proof: Groth16Proof,
+        vk: Groth16Vk,
+        public_inputs: Vec<U256>,
+    ) -> bool {
+        let public_inputs_ref: Vec<U256> = public_inputs;
+        let vk_x = match compute_vk_x(&env, &public_inputs_ref, &vk.ic) {
+            Ok(v) => v,
+            Err(_) => return false,
+        };
+        let pairs = [
+            (proof.a, proof.b),
+            (negate_g1(vk_x), vk.gamma_g2),
+            (negate_g1(proof.c), vk.delta_g2),
+            (negate_g1(vk.alpha_g1), vk.beta_g2),
+        ];
+        pairing_check(&env, &pairs).unwrap_or(false)
+    }
+}
+```
+
+> This example is intentionally minimal. A production verifier should include byte deserialization, explicit gas budgeting, and robust input validation.
+
+---
+
+## 11. Test the verifier
+
+Create contract unit tests with `Env::default()`, register the contract, and call the generated client.
+
+A useful first test is a simple BN254 identity pairing check to confirm `pairing_check` and the contract scaffolding work.
+
+---
+
+## 12. Build and deploy
+
+```bash
+cargo build --target wasm32-unknown-unknown --release
+```
+
+Then deploy with Soroban:
+
+```bash
+soroban contract deploy --wasm target/wasm32-unknown-unknown/release/<contract>.wasm --network local
+```
+
+Invoke your entrypoint with proof bytes and public inputs encoded in the format your contract expects.
+
+---
+
+## 13. Practical notes
+
+- Groth16 verification on Soroban relies on CAP-0075 host functions for BN254 pairing efficiency.
+- A single Groth16 verification with 1 public input costs roughly **167M instructions** in this repo's benchmarks.
+- Keep the verifier contract lean and separate from business logic. Use cross-contract calls if your application needs a higher-level dApp contract.
+
+---
+
+## 14. Further reading
+
+- `docs/cap0075-integration-guide.mdx`
+- `docs/cross-contract-verification.mdx`
+- `contracts/verifier-sample/`
+- `GAS.md`

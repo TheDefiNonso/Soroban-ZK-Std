@@ -1,7 +1,5 @@
 {
-
-  "generated_at": "2026-05-30T22:51:32.320Z",
-
+  "generated_at": "2026-06-23T15:25:10.482Z",
   "version": "1.0.0",
   "crates": [
     {
@@ -74,6 +72,18 @@
           "name": "Bn254",
           "doc": "The BN254 elliptic curve group parameters and arithmetic operations.",
           "signature": "pub struct Bn254;"
+        },
+        {
+          "kind": "struct",
+          "name": "AffinePoint",
+          "doc": "",
+          "signature": "pub struct AffinePoint"
+        },
+        {
+          "kind": "struct",
+          "name": "JacobianPoint",
+          "doc": "",
+          "signature": "pub struct JacobianPoint"
         },
         {
           "kind": "const",
@@ -149,6 +159,12 @@
         },
         {
           "kind": "fn",
+          "name": "is_valid_fq",
+          "doc": "Validates a BN254 base field element in Fq.  This ensures the element is within the field modulus and prevents malformed G2 coordinate components from being passed into the native host pairing call.",
+          "signature": "pub fn is_valid_fq(val: u256) -> bool"
+        },
+        {
+          "kind": "fn",
           "name": "add",
           "doc": "",
           "signature": "pub fn add(a: u256, b: u256) -> u256"
@@ -203,6 +219,12 @@
         },
         {
           "kind": "fn",
+          "name": "is_valid_g1_subgroup",
+          "doc": "",
+          "signature": "pub fn is_valid_g1_subgroup(x: u256, y: u256) -> bool"
+        },
+        {
+          "kind": "fn",
           "name": "g1_scalar_mul",
           "doc": "",
           "signature": "pub fn g1_scalar_mul(point: G1Projective, scalar: u256) -> G1Projective"
@@ -221,6 +243,12 @@
         },
         {
           "kind": "fn",
+          "name": "is_identity",
+          "doc": "",
+          "signature": "pub fn is_identity(&self) -> bool"
+        },
+        {
+          "kind": "fn",
           "name": "ct_select",
           "doc": "",
           "signature": "pub fn ct_select(choice: u128, a: Self, b: Self) -> Self"
@@ -230,6 +258,78 @@
           "name": "double",
           "doc": "Doubles the projective point (2 * P) using Jacobian formulas.",
           "signature": "pub fn double(&self) -> Self"
+        },
+        {
+          "kind": "struct",
+          "name": "DensePolynomial",
+          "doc": "",
+          "signature": "pub struct DensePolynomial<const MAX_COEFFS: usize>"
+        },
+        {
+          "kind": "struct",
+          "name": "SparsePolynomial",
+          "doc": "",
+          "signature": "pub struct SparsePolynomial<const MAX_TERMS: usize>"
+        },
+        {
+          "kind": "fn",
+          "name": "from_coefficients_slice",
+          "doc": "",
+          "signature": "pub fn from_coefficients_slice(coeffs: &[u256]) -> Result<Self, ZkError>"
+        },
+        {
+          "kind": "fn",
+          "name": "zero",
+          "doc": "",
+          "signature": "pub fn zero() -> Self"
+        },
+        {
+          "kind": "fn",
+          "name": "one",
+          "doc": "",
+          "signature": "pub fn one() -> Self"
+        },
+        {
+          "kind": "fn",
+          "name": "is_zero",
+          "doc": "",
+          "signature": "pub fn is_zero(&self) -> bool"
+        },
+        {
+          "kind": "fn",
+          "name": "degree",
+          "doc": "",
+          "signature": "pub fn degree(&self) -> usize"
+        },
+        {
+          "kind": "fn",
+          "name": "coeffs",
+          "doc": "",
+          "signature": "pub fn coeffs(&self) -> &[u256]"
+        },
+        {
+          "kind": "fn",
+          "name": "evaluate",
+          "doc": "",
+          "signature": "pub fn evaluate(&self, x: u256) -> u256"
+        },
+        {
+          "kind": "fn",
+          "name": "try_mul",
+          "doc": "",
+          "signature": "pub fn try_mul(&self, other: &Self) -> Result<Self, ZkError>"
+        },
+        {
+          "kind": "fn",
+          "name": "from_terms_slice",
+          "doc": "",
+          "signature": "pub fn from_terms_slice(terms: &[(usize, u256)]) -> Result<Self, ZkError>"
+        },
+        {
+          "kind": "fn",
+          "name": "terms",
+          "doc": "",
+          "signature": "pub fn terms(&self) -> &[(usize, u256)]"
         }
       ]
     },
@@ -238,6 +338,30 @@
       "path": "crates/zk-soroban",
       "description": "Stellar integration. Traits that extend the Soroban Env, host-function mappings, and XDR conversion.",
       "items": [
+        {
+          "kind": "enum",
+          "name": "ConstantKey",
+          "doc": "",
+          "signature": "pub enum ConstantKey"
+        },
+        {
+          "kind": "fn",
+          "name": "round_constants",
+          "doc": "Return the cached BN254 Poseidon2 round constants, computing and storing them on the first call within the contract.",
+          "signature": "pub fn round_constants(env: &Env) -> Vec<Vec<U256>>"
+        },
+        {
+          "kind": "fn",
+          "name": "mat_diag",
+          "doc": "Return the cached BN254 Poseidon2 matrix diagonal, computing and storing it on the first call within the contract.",
+          "signature": "pub fn mat_diag(env: &Env) -> Vec<U256>"
+        },
+        {
+          "kind": "fn",
+          "name": "fr_modulus",
+          "doc": "Return the cached BN254 Fr modulus, computing and storing it on the first call within the contract.",
+          "signature": "pub fn fr_modulus(env: &Env) -> U256"
+        },
         {
           "kind": "fn",
           "name": "check_budget",
@@ -275,6 +399,12 @@
           "signature": "pub fn validate_scalar(env: Env, val: U256) -> bool"
         },
         {
+          "kind": "fn",
+          "name": "poseidon2_hash",
+          "doc": "Poseidon2 hash of a list of BN254 field elements, using the instance-storage cache for the round constants and matrix diagonal (Issue #124).  The first invocation populates the cache from code; later invocations reuse the constants stored in `StorageType::Instance` instead of rebuilding them on every call.",
+          "signature": "pub fn poseidon2_hash(env: Env, inputs: soroban_sdk::Vec<U256>) -> U256"
+        },
+        {
           "kind": "struct",
           "name": "G2Affine",
           "doc": "",
@@ -301,8 +431,14 @@
         {
           "kind": "fn",
           "name": "new",
-          "doc": "Create a new sponge with zeroed state.",
+          "doc": "Create a new sponge with zeroed state, building the BN254 constants from code (no contract storage required).  The round constants and matrix diagonal are computed once here and reused across every [`Poseidon2Sponge::absorb`]/[`Poseidon2Sponge::squeeze`] permutation, rather than being rebuilt on each permutation.",
           "signature": "pub fn new(env: &Env) -> Self"
+        },
+        {
+          "kind": "fn",
+          "name": "new_cached",
+          "doc": "Create a new sponge whose BN254 constants are sourced from the contract instance storage cache (Issue #124).  On the first invocation within a contract the constants are computed and written to `StorageType::Instance`; subsequent invocations read them back from storage instead of rebuilding them. Must be called from within a contract invocation context (it touches instance storage).",
+          "signature": "pub fn new_cached(env: &Env) -> Self"
         },
         {
           "kind": "fn",
@@ -321,6 +457,24 @@
           "name": "hash_to_field",
           "doc": "Hash a slice of BN254 Fr field elements to a single field element.  Compatible with Noir/Circom Poseidon2 constraints (t=3, d=5, rate=2). Uses capacity-zero sponge initialisation.",
           "signature": "pub fn hash_to_field(env: &Env, inputs: &[U256]) -> U256"
+        },
+        {
+          "kind": "fn",
+          "name": "hash_to_field_cached",
+          "doc": "Instance-cached variant of [`hash_to_field`] (Issue #124).  Identical output to [`hash_to_field`], but the BN254 round constants and matrix diagonal are loaded from (and lazily populated into) the contract instance storage cache rather than rebuilt from code. Must be called from within a contract invocation context.",
+          "signature": "pub fn hash_to_field_cached(env: &Env, inputs: &[U256]) -> U256"
+        },
+        {
+          "kind": "struct",
+          "name": "Transcript",
+          "doc": "Fiat-Shamir transcript built on top of the BN254 Poseidon2 sponge.  The transcript is stateful: each absorb updates the sponge state, and each squeeze advances the permutation before producing the next challenge.",
+          "signature": "pub struct Transcript"
+        },
+        {
+          "kind": "fn",
+          "name": "squeeze_challenge",
+          "doc": "Squeeze the next Fiat-Shamir challenge as a validated BN254 `Fr`.",
+          "signature": "pub fn squeeze_challenge(&mut self) -> Result<Fr, ZkError>"
         }
       ]
     }

@@ -19,26 +19,16 @@ export const GasCalculator: React.FC = () => {
     hashRounds: 8,
   });
 
-  const [result, setResult] = useState<GasEstimationResult | null>(null);
-  const [isCalculating, setIsCalculating] = useState(false);
-
-  useEffect(() => {
-    setIsCalculating(true);
-    const timer = setTimeout(() => {
-      const estimation = estimateGas(inputs);
-      setResult(estimation);
-      setIsCalculating(false);
-    }, 300); // simulate network/computation delay
-
-    return () => clearTimeout(timer);
-  }, [inputs]);
+  const [result, setResult] = useState<GasEstimationResult>(() => estimateGas(inputs));
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setInputs((prev) => ({
-      ...prev,
+    const nextInputs = {
+      ...inputs,
       [name]: name === 'proofType' ? value : Number(value),
-    }));
+    };
+    setInputs(nextInputs);
+    setResult(estimateGas(nextInputs));
   };
 
   const config = mockProofConfigs[inputs.proofType];
@@ -150,65 +140,56 @@ export const GasCalculator: React.FC = () => {
       <div className="flex-1 bg-zinc-900/50 rounded-lg border border-zinc-800 p-6 flex flex-col">
         <h3 className="text-lg font-bold text-white mb-4 border-b border-zinc-800 pb-2">Estimation Results</h3>
         
-        {isCalculating || !result ? (
-          <div className="flex-1 flex items-center justify-center min-h-[200px]">
-            <div className="animate-pulse text-zinc-500 flex items-center gap-2">
-              <div className="w-4 h-4 rounded-full border-2 border-zinc-500 border-t-transparent animate-spin"></div>
-              Calculating...
+        <div className="space-y-6 flex-1">
+          {/* Instruction Count */}
+          <div>
+            <p className="text-zinc-400 mb-1">Estimated Instructions</p>
+            <div className="text-4xl font-bold text-white tracking-tight">
+              {result.instructionCount.toLocaleString()}
             </div>
           </div>
-        ) : (
-          <div className="space-y-6 flex-1">
-            {/* Instruction Count */}
-            <div>
-              <p className="text-zinc-400 mb-1">Estimated Instructions</p>
-              <div className="text-4xl font-bold text-white tracking-tight">
-                {result.instructionCount.toLocaleString()}
-              </div>
-            </div>
 
-            {/* Metrics Grid */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider">Complexity</p>
-                <p className={`font-semibold ${
-                  result.relativeComplexity === 'Low' ? 'text-green-400' :
-                  result.relativeComplexity === 'Medium' ? 'text-yellow-400' :
-                  result.relativeComplexity === 'High' ? 'text-orange-400' : 'text-red-400'
-                }`}>
-                  {result.relativeComplexity}
-                </p>
-              </div>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider">Efficiency Level</p>
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold text-zinc-200">{result.efficiencyLevel}%</p>
-                  <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-zinc-400 transition-all duration-500"
-                      style={{ width: `${result.efficiencyLevel}%` }}
-                    />
-                  </div>
+          {/* Metrics Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+              <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider">Complexity</p>
+              <p className={`font-semibold ${
+                result.relativeComplexity === 'Low' ? 'text-green-400' :
+                result.relativeComplexity === 'Medium' ? 'text-yellow-400' :
+                result.relativeComplexity === 'High' ? 'text-orange-400' : 'text-red-400'
+              }`}>
+                {result.relativeComplexity}
+              </p>
+            </div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+              <p className="text-zinc-500 text-xs mb-1 uppercase tracking-wider">Efficiency Level</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-zinc-200">{result.efficiencyLevel}%</p>
+                <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-zinc-400 transition-all duration-500"
+                    style={{ width: `${result.efficiencyLevel}%` }}
+                  />
                 </div>
               </div>
             </div>
-
-            {/* Warnings */}
-            {result.warnings.length > 0 && (
-              <div className="bg-red-950/30 border border-red-900/50 rounded-lg p-4 space-y-2">
-                <p className="text-red-400 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
-                  Warnings
-                </p>
-                <ul className="list-disc list-inside text-red-200/80 space-y-1">
-                  {result.warnings.map((warning, idx) => (
-                    <li key={idx}>{warning}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
           </div>
-        )}
+
+          {/* Warnings */}
+          {result.warnings.length > 0 && (
+            <div className="bg-red-950/30 border border-red-900/50 rounded-lg p-4 space-y-2">
+              <p className="text-red-400 font-semibold text-xs uppercase tracking-wider flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
+                Warnings
+              </p>
+              <ul className="list-disc list-inside text-red-200/80 space-y-1">
+                {result.warnings.map((warning, idx) => (
+                  <li key={idx}>{warning}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

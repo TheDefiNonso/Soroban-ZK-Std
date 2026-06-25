@@ -1,0 +1,26 @@
+name: Enforce MDX Documentation Standards
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - "docs/**"
+      - "scripts/check-doc-extensions.sh"
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - "docs/**"
+      - "scripts/check-doc-extensions.sh"
+
+jobs:
+  check-doc-extensions:
+    name: Reject .md files outside specs/
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Make script executable
+        run: chmod +x scripts/check-doc-extensions.sh
+
+      - name: Check documentation file extensions
+        run: bash scripts/check-doc-extensions.sh

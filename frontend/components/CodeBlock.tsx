@@ -141,22 +141,7 @@ export function CodeBlock({
 
   const lineCount = code.trim().split("\n").length;
 
-  if (!mounted) {
-    return (
-      <div className="my-6 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 overflow-hidden">
-        <div 
-          className="p-4 overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500" 
-          tabIndex={0}
-          role="region"
-          aria-label="Code block content"
-        >
-          <pre className="text-sm text-neutral-500">
-            <code>{code.trim()}</code>
-          </pre>
-        </div>
-      </div>
-    );
-  }
+  const fallbackHtml = `<pre class="shiki" style="background-color: transparent;"><code>${escapeHtml(code.trim())}</code></pre>`;
 
   return (
     <div className="my-6 rounded-xl border border-neutral-200 dark:border-neutral-800 overflow-hidden group transition-colors duration-300">
@@ -230,7 +215,7 @@ export function CodeBlock({
             ref={codeRef}
             tabIndex={0}
             className="flex-1 overflow-x-auto text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500 [&_pre]:!bg-transparent [&_pre]:!p-4 [&_pre]:!m-0 [&_code]:!text-sm [&_code]:leading-6 [&_code]:font-mono"
-            dangerouslySetInnerHTML={{ __html: highlightedCode }}
+            dangerouslySetInnerHTML={{ __html: highlightedCode || fallbackHtml }}
             aria-label="Code block content"
             role="region"
           />

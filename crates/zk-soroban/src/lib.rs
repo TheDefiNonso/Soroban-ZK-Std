@@ -1,4 +1,5 @@
 #![no_std]
+pub mod cache;
 pub mod pairing;
 pub mod poseidon2;
 
@@ -71,6 +72,21 @@ impl ZkContract {
         // This forces the compiler to include the ethnum and zk-core logic
         env.is_bn254_scalar(val)
     }
+
+    /// Poseidon2 hash of a list of BN254 field elements, using the
+    /// instance-storage cache for the round constants and matrix diagonal
+    /// (Issue #124).
+    ///
+    /// The first invocation populates the cache from code; later invocations
+    /// reuse the constants stored in `StorageType::Instance` instead of
+    /// rebuilding them on every call.
+    pub fn poseidon2_hash(env: Env, inputs: soroban_sdk::Vec<U256>) -> U256 {
+        let mut sponge = poseidon2::Poseidon2Sponge::new_cached(&env);
+        for input in inputs.iter() {
+            sponge.absorb(core::slice::from_ref(&input));
+        }
+        sponge.squeeze()
+    }
 }
 
 #[cfg(test)]
@@ -121,5 +137,31 @@ mod tests {
         let val = U256::from_be_bytes(&env, &bytes);
         let result = env.fr_from_u256(val);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn poseidon2_hash_matches_uncached_and_reuses_cache() {
+        let env = Env::default();
+        env.cost_estimate().budget().reset_unlimited();
+        let id = env.register(ZkContract, ());
+        let client = ZkContractClient::new(&env, &id);
+
+        let inputs = soroban_sdk::vec![&env, U256::from_u128(&env, 1), U256::from_u128(&env, 2)];
+
+        // The cached on-chain hash equals the pure (uncached) library hash.
+        let raw = [U256::from_u128(&env, 1), U256::from_u128(&env, 2)];
+        let expected = poseidon2::hash_to_field(&env, &raw);
+        assert_eq!(client.poseidon2_hash(&inputs), expected);
+
+        // A second invocation hits the populated instance cache and is stable.
+        assert_eq!(client.poseidon2_hash(&inputs), expected);
+
+        // The constants are present in the contract's instance storage.
+        env.as_contract(&id, || {
+            let store = env.storage().instance();
+            assert!(store.has(&cache::ConstantKey::Poseidon2RoundConstants));
+            assert!(store.has(&cache::ConstantKey::Poseidon2MatDiag));
+            assert!(store.has(&cache::ConstantKey::FrModulus));
+        });
     }
 }

@@ -9,6 +9,28 @@ import { Demo } from '@/components/mdx/Demo';
 import { MdxCodeBlock } from '@/components/mdx/MdxCodeBlock';
 import { getAllDocSlugs, getDocFilePath } from '@/lib/mdx';
 
+function stripFrontmatter(source: string): string {
+  if (!source.startsWith('---\n')) {
+    return source;
+  }
+
+  const lines = source.split('\n');
+  let endIndex = -1;
+
+  for (let i = 1; i < lines.length; i += 1) {
+    if (lines[i].trim() === '---') {
+      endIndex = i;
+      break;
+    }
+  }
+
+  if (endIndex === -1) {
+    return source;
+  }
+
+  return lines.slice(endIndex + 1).join('\n').replace(/^\n+/, '');
+}
+
 export async function generateStaticParams() {
   return getAllDocSlugs().map(({ slug }) => ({ slug }));
 }
@@ -108,7 +130,7 @@ export default async function MdxDocPage({ params }: PageProps) {
   const filePath = getDocFilePath(params.slug);
   if (!filePath) notFound();
 
-  const source = fs.readFileSync(filePath, 'utf-8');
+  const source = stripFrontmatter(fs.readFileSync(filePath, 'utf-8'));
 
   return (
     <DocsLayout>

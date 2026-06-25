@@ -90,7 +90,7 @@ export default function NotFound() {
                       {link.title}
                     </h3>
                     <span className="text-lg text-neutral-400 transition-transform duration-200 group-hover:translate-x-1 group-hover:-translate-y-1">
-                      ->
+                      {'→'}
                     </span>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-neutral-600 dark:text-neutral-400">

@@ -20,7 +20,7 @@ const RATE: u32 = 2;
 // ── BN254 Fr modulus (used for field-addition during absorption) ───────────────
 // r = 0x30644e72e131a029b85045b68181585d2833e84879b9709143e1f593f0000001
 
-fn fr_modulus(env: &Env) -> U256 {
+pub(crate) fn fr_modulus(env: &Env) -> U256 {
     u(
         env,
         0x30644e72e131a029b85045b68181585d,
@@ -39,12 +39,12 @@ fn u(env: &Env, hi: u128, lo: u128) -> U256 {
 }
 
 /// Field addition mod r: (a + b) mod r.
-/// Both inputs must be < r.
-fn field_add(env: &Env, a: &U256, b: &U256) -> U256 {
+/// Both inputs must be < r. The modulus is passed in so callers can reuse a
+/// cached value instead of rebuilding it on every addition.
+fn field_add(a: &U256, b: &U256, modulus: &U256) -> U256 {
     let sum = a.add(b);
-    let r = fr_modulus(env);
-    if sum >= r {
-        sum.sub(&r)
+    if sum >= *modulus {
+        sum.sub(modulus)
     } else {
         sum
     }
@@ -65,7 +65,7 @@ fn u256_to_fr(challenge: U256) -> Result<Fr, ZkError> {
 // ── BN254 t=3 Poseidon2 constants ─────────────────────────────────────────────
 
 /// Internal matrix diagonal (M_I − I) for t=3 BN254: [1, 1, 2].
-fn mat_diag(env: &Env) -> Vec<U256> {
+pub(crate) fn mat_diag(env: &Env) -> Vec<U256> {
     vec![
         env,
         U256::from_u128(env, 1),
@@ -76,7 +76,7 @@ fn mat_diag(env: &Env) -> Vec<U256> {
 
 /// 64 round-constant rows (4 full + 56 partial + 4 full) for BN254 Poseidon2 t=3.
 /// Source: soroban-env-host-25.0.1 / poseidon2_instance_bn254.rs (RC3).
-fn round_constants(env: &Env) -> Vec<Vec<U256>> {
+pub(crate) fn round_constants(env: &Env) -> Vec<Vec<U256>> {
     let z = U256::from_u128(env, 0);
 
     // 3-element full-round row
@@ -529,17 +529,53 @@ pub struct Poseidon2Sponge {
     state: Vec<U256>,
     /// Next rate slot to write into during absorption.
     rate_idx: u32,
+    /// Internal matrix diagonal, materialised once per sponge instead of on
+    /// every permutation.
+    mat: Vec<U256>,
+    /// 64 round-constant rows, materialised once per sponge.
+    rc: Vec<Vec<U256>>,
+    /// BN254 Fr modulus, reused across all field additions.
+    modulus: U256,
 }
 
 impl Poseidon2Sponge {
-    /// Create a new sponge with zeroed state.
+    /// Create a new sponge with zeroed state, building the BN254 constants
+    /// from code (no contract storage required).
+    ///
+    /// The round constants and matrix diagonal are computed once here and
+    /// reused across every [`Poseidon2Sponge::absorb`]/[`Poseidon2Sponge::squeeze`]
+    /// permutation, rather than being rebuilt on each permutation.
     pub fn new(env: &Env) -> Self {
+        Self::with_constants(env, mat_diag(env), round_constants(env), fr_modulus(env))
+    }
+
+    /// Create a new sponge whose BN254 constants are sourced from the contract
+    /// instance storage cache (Issue #124).
+    ///
+    /// On the first invocation within a contract the constants are computed and
+    /// written to `StorageType::Instance`; subsequent invocations read them back
+    /// from storage instead of rebuilding them. Must be called from within a
+    /// contract invocation context (it touches instance storage).
+    pub fn new_cached(env: &Env) -> Self {
+        Self::with_constants(
+            env,
+            crate::cache::mat_diag(env),
+            crate::cache::round_constants(env),
+            crate::cache::fr_modulus(env),
+        )
+    }
+
+    /// Shared constructor: build a zeroed sponge around the supplied constants.
+    fn with_constants(env: &Env, mat: Vec<U256>, rc: Vec<Vec<U256>>, modulus: U256) -> Self {
         let z = U256::from_u128(env, 0);
         let state = vec![env, z.clone(), z.clone(), z];
         Self {
             env: env.clone(),
             state,
             rate_idx: 0,
+            mat,
+            rc,
+            modulus,
         }
     }
 
@@ -547,7 +583,7 @@ impl Poseidon2Sponge {
     pub fn absorb(&mut self, inputs: &[U256]) {
         for input in inputs {
             let cur = self.state.get(self.rate_idx).unwrap();
-            let next = field_add(&self.env, &cur, input);
+            let next = field_add(&cur, input, &self.modulus);
             self.state.set(self.rate_idx, next);
             self.rate_idx += 1;
             if self.rate_idx == RATE {
@@ -570,8 +606,6 @@ impl Poseidon2Sponge {
 
     fn permute(&mut self) {
         let field = symbol_short!("BN254");
-        let mat = mat_diag(&self.env);
-        let rc = round_constants(&self.env);
         self.state = self.env.crypto_hazmat().poseidon2_permutation(
             &self.state,
             field,
@@ -579,8 +613,8 @@ impl Poseidon2Sponge {
             D,
             ROUNDS_F,
             ROUNDS_P,
-            &mat,
-            &rc,
+            &self.mat,
+            &self.rc,
         );
     }
 }
@@ -593,6 +627,18 @@ impl Poseidon2Sponge {
 /// Uses capacity-zero sponge initialisation.
 pub fn hash_to_field(env: &Env, inputs: &[U256]) -> U256 {
     let mut sponge = Poseidon2Sponge::new(env);
+    sponge.absorb(inputs);
+    sponge.squeeze()
+}
+
+/// Instance-cached variant of [`hash_to_field`] (Issue #124).
+///
+/// Identical output to [`hash_to_field`], but the BN254 round constants and
+/// matrix diagonal are loaded from (and lazily populated into) the contract
+/// instance storage cache rather than rebuilt from code. Must be called from
+/// within a contract invocation context.
+pub fn hash_to_field_cached(env: &Env, inputs: &[U256]) -> U256 {
+    let mut sponge = Poseidon2Sponge::new_cached(env);
     sponge.absorb(inputs);
     sponge.squeeze()
 }
