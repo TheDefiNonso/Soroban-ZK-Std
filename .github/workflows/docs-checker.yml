@@ -141,7 +141,7 @@ jobs:
         run: |
           echo "=== Validating CAP references ==="
 
-          grep -r "CAP-0074\|CAP-0075\|CAP-0080" docs/ frontend/content/docs/ frontend/app/docs/ --include="*.md" --include="*.mdx" -l | while read file; do
+          grep -r "CAP-0074\|CAP-0075\|CAP-0080" frontend/content/docs/ --include="*.md" --include="*.mdx" -l | while read file; do
             echo "Checking CAP refs in: $file"
 
             if grep -q "CAP-0074" "$file"; then
@@ -163,7 +163,7 @@ jobs:
         run: |
           echo "=== Validating ZK documentation standards ==="
 
-          find docs/ frontend/content/docs/ -name "*.md" -o -name "*.mdx" 2>/dev/null | while read file; do
+          find frontend/content/docs/ -name "*.md" -o -name "*.mdx" 2>/dev/null | while read file; do
             if [[ "$file" == *"getting-started"* ]] || [[ "$file" == *"mdx-guide"* ]] || [[ "$file" == *"math-rendering"* ]]; then
               continue
             fi
@@ -442,7 +442,7 @@ jobs:
           echo "=== Checking spelling in documentation ==="
           cspell --words-file project-words.txt \
             "frontend/content/docs/**/*.mdx" \
-            "docs/**/*.md" \
+            "frontend/content/docs/**/*.md" \
             "README.md" \
             "BENCHMARK.md" \
             "GAS.md" \
