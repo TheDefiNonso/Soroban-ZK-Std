@@ -61,13 +61,13 @@ jobs:
       - name: Disable vendoring for Miri
         run: rm -f .cargo/config.toml
 
-      - name: 🧪 Run Miri on zk-core library
-        run: cargo +nightly miri test -p zk-core --lib
+      - name: 🧪 Run Miri on soroban-zk-core library
+        run: cargo +nightly miri test -p soroban-zk-core --lib
         env:
           MIRIFLAGS: -Zmiri-disable-isolation
 
       - name: 🧪 Run native integration tests
-        run: cargo +nightly test -p zk-core --test eip196_vectors
+        run: cargo +nightly test -p soroban-zk-core --test eip196_vectors
 
   wasm-size-check:
     name: 📦 WASM 64KB Limit Check

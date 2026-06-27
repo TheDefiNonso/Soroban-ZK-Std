@@ -493,8 +493,8 @@ jobs:
         run: |
           echo "=== Checking benchmark docs are current ==="
 
-          if [ -f "BENCHMARK.md" ] && [ -d "crates/zk-core/benches" ]; then
-            bench_files=$(find crates/zk-core/benches -name "*.rs" | wc -l)
+          if [ -f "BENCHMARK.md" ] && [ -d "crates/soroban-zk-core/benches" ]; then
+            bench_files=$(find crates/soroban-zk-core/benches -name "*.rs" | wc -l)
             if [ "$bench_files" -gt 0 ]; then
               if ! grep -q "g1_ops\|instruction_cost\|benchmark" BENCHMARK.md; then
                 echo "⚠️  WARNING: BENCHMARK.md may be out of sync with bench files"
