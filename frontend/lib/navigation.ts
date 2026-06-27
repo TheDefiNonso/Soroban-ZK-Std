@@ -33,6 +33,7 @@ export const navigation: NavItem[] = [
       { title: "Halo2 Perm", href: "/docs/halo2_perm" },
       { title: "Non Native Add", href: "/docs/non_native_add" },
       { title: "FRI", href: "/docs/fri" },
+      { title: "G2 Subgroup Validation", href: "docs/g2_subgroup" },
       { title: "KZG Commitment Generation", href: "/docs/kzg_commit" },
     ],
   },
